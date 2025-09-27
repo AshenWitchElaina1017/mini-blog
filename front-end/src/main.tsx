@@ -7,6 +7,8 @@ import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import PostForm from './components/PostForm.tsx'
 import PostList from './components/PostList.tsx'
 import PostDetail from './components/PostDetail.tsx'
+import Login from './components/Login.tsx'
+import Register from './components/Register.tsx'
 
 const routes=createBrowserRouter([
   {
@@ -17,6 +19,8 @@ const routes=createBrowserRouter([
         {path: 'posts/new',element: <PostForm />,},
         {path: 'posts/:id',element: <PostDetail />,},
         {path: 'posts/edit/:id',element: <PostForm />,},
+        { path: 'login', element: <Login /> },
+        { path: 'register', element: <Register /> },
       ],
     },
 ])

@@ -7,7 +7,6 @@ export default function PostForm() {
   const { id } = useParams<{ id: string }>();
   // 获取导航函数，用于提交后跳转
   const navigate = useNavigate();
-
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -17,10 +16,7 @@ export default function PostForm() {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-
-  // 判断当前是否为编辑模式
   const isEditMode = Boolean(id);
-
   // 如果是编辑模式，在组件加载时获取文章数据
   useEffect(() => {
     if (isEditMode) {
@@ -29,7 +25,6 @@ export default function PostForm() {
           // 将获取到的数据填充到表单中
           setFormData({
             title: post.title,
-            // post.description 可能为 null，提供一个默认空字符串
             description: post.description || '',
             content: post.content,
             author: post.author || '',
@@ -46,7 +41,6 @@ export default function PostForm() {
       setIsLoading(false);
     }
   }, [id, isEditMode]);
-
   // 处理表单输入变化
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -55,7 +49,6 @@ export default function PostForm() {
       [name]: value,
     }));
   };
-
   // 处理表单提交
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -64,12 +57,10 @@ export default function PostForm() {
       return;
     }
     setIsSubmitting(true);
-
     // 准备提交的数据
     const postData: Omit<Post, 'id' | 'createdAt' | 'updatedAt'> = {
       ...formData,
     };
-
     try {
       if (isEditMode) {
         // 编辑模式：调用 editPost API
@@ -94,7 +85,6 @@ export default function PostForm() {
   if (isLoading) {
     return <div className="text-center mt-10">正在加载文章数据...</div>;
   }
-
   return (
     <div className="max-w-2xl mx-auto mt-10 p-6 sm:p-8 bg-white dark:bg-zinc-900 shadow-xl rounded-lg">
       <h1 className="text-3xl font-bold tracking-tight text-zinc-900 dark:text-white mb-6">
