@@ -1,4 +1,3 @@
-// mini-blog/backend/models/user.go
 package models
 
 import "time"
