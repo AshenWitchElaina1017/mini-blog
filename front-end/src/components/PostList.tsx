@@ -55,7 +55,24 @@ export default function PostList() {
           <Link to={`/posts/${a.id}`}>
             <h2 className="text-xl font-bold mb-2 hover:text-blue-600">{a.title}</h2>
             {/* a.image存在时才渲染图片 */}
-            {a.image && <img src={a.image} alt={a.title} className="w-full h-auto rounded-md mb-4" />}
+            {a.image && (
+            // 1. 创建一个外层容器 div
+            // h-48: 设置一个固定的高度，例如 h-48 (12rem 或 192px)。你可以根据需要调整这个值 (如 h-32, h-64 等)
+            // overflow-hidden: 隐藏图片超出容器的部分，这是实现裁剪效果的关键
+            // 将原先在 img 上的样式（如 rounded-md, mb-4）移到这个容器上
+            <div className="w-full h-64 overflow-hidden rounded-md mb-4">
+                <img
+                src={a.image}
+                alt={a.title}
+                // 2. 设置图片本身的样式
+                // w-full h-full: 让图片完全填满父容器（我们刚刚创建的 div）的宽度和高度
+                // object-cover: 这是最重要的部分。它会缩放图片以完全覆盖容器，同时保持图片的宽高比。
+                //               图片多余的部分会被裁剪掉，效果类似于 background-size: cover。
+                // object-center: (可选) 确保图片在容器内是居中对齐的。
+                className="w-full h-full object-cover object-center"
+                />
+            </div>
+            )}
             {/* 文章简短描述 */}
             {a.description && <Markdown>{a.description}</Markdown>}
           </Link>
