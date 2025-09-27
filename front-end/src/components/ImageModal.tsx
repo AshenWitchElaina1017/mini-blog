@@ -39,13 +39,22 @@ export default function ImageModal({ imageUrl, onClose }: ImageModalProps): JSX.
   return (
     <div
       onClick={handleBackdropClick}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 transition-opacity duration-300"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm transition-all duration-300 animate-in fade-in-0"
     >
-      <div className="relative max-w-4xl max-h-[90vh]">
+      <div className="relative max-w-[95vw] max-h-[95vh] animate-in zoom-in-95 duration-300">
+        <button
+          onClick={onClose}
+          className="absolute -top-12 right-0 z-10 flex items-center justify-center w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white transition-all duration-200 backdrop-blur-sm border border-white/20"
+          aria-label="关闭图片"
+        >
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
         <img
           src={imageUrl}
           alt="放大的图片"
-          className="w-auto h-auto max-h-[90vh] object-contain"
+          className="w-auto h-auto max-w-full max-h-full object-contain rounded-lg shadow-2xl border border-white/10"
         />
       </div>
     </div>
