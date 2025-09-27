@@ -11,7 +11,7 @@ type Post struct {
 	Description *string    `json:"description"`          // 帖子的描述
 	Content   string    `json:"content"`              // 帖子的内容
 	Author    *string   `json:"author,omitempty"`     // 作者的ID
-	Image     *string   `json:"image,omitempty"`      // 帖子的图片链接（可选）
+	Image     *string   `json:"image,omitempty"`      // 帖子的图片链接
 	CreatedAt time.Time `json:"createdAt"`            // 记录创建时间
 	UpdatedAt time.Time `json:"updatedAt"`            // 记录最后更新时间
 }

@@ -1,79 +1,125 @@
-# Mini Blog
+﻿# Mini Blog
 
-面向学习和演示的全栈博客示例，包含 React 前端与 Go 后端。项目演示了如何用最少的依赖实现文章的创建、阅读、更新与删除（CRUD），并提供 Markdown 内容渲染、图片展示等扩展字段。
+一个用于练习与演示的全栈迷你博客项目。前端由 React 19 + Vite 构建，后端使用 Go + Gin 提供 RESTful API，数据持久化落地到本地 SQLite。系统支持文章的创建、阅读、更新、删除（CRUD），配合 Markdown 正文、图片预览、作者信息，以及注册/登录获取 JWT 令牌的认证流程。
 
-## 特色亮点
-- 前后端分离：Vite + React 19 提供现代化开发体验，Gin + GORM 提供轻量 API 服务。
-- 完整的文章生命周期：支持文章列表、详情、创建、编辑、删除，字段覆盖标题、描述、内容、作者、配图等。
-- Markdown 渲染：前端使用 react-markdown 将正文及简介以 Markdown 形式显示。
-- 零配置数据存储：默认嵌入式 SQLite 数据库 mini-blog.db，开箱即用，适合本地演示。
-- 类型安全：前端使用 TypeScript 描述接口模型，减少前后端沟通成本。
+## 功能亮点
+- 文章管理：列表、详情、Markdown 渲染、配图放大、编辑与删除一次到位。
+- 账号体系：注册后使用 JWT 登录，前端将令牌保存在 `localStorage` 并在写操作时自动附带到请求头。
+- 体验优化：Tailwind 4 原子类快速构建响应式界面，基于 `react-markdown` + `remark-gfm` 支持 GFM 语法。
+- 数据安全：后端使用 bcrypt 哈希密码、Gin 中间件解析 JWT（示例默认仅保护写操作，可扩展为全局校验）。
 
 ## 技术栈
-- 前端：React 19 · TypeScript 5.8 · Vite 7 · React Router 7 · Tailwind CSS 4 · pnpm
-- 后端：Go 1.24 · Gin 1.11 · GORM 1.31 · SQLite
-- 工具链：ESLint、SWC、Tailwind CLI、Apifox（接口调试示例）
+- 前端：React 19、TypeScript 5.8、React Router 7、Tailwind CSS 4、Vite 7、pnpm 9。
+- 后端：Go 1.24、Gin、GORM、SQLite、bcrypt、golang-jwt。
+- 支撑工具：ESLint、SWC、Tailwind Vite 插件。
 
-## 目录结构
-    .
-    ├── README.md                # 根目录文档（本文件）
-    ├── front-end/               # Vite + React 前端工程
-    │   ├── README.md             # 前端专属说明
-    │   └── ...
-    └── backend/                 # Go + Gin 后端工程
-        ├── README.md             # 后端专属说明
-        └── ...
+## 系统结构
+```
+front-end/ (React SPA)
+        │  fetch JSON over HTTP
+        ▼
+backend/ (Go + Gin API) ── GORM ──> SQLite (mini-blog.db)
+```
 
-更多细节请分别查阅 front-end/README.md 与 backend/README.md。
+## 目录概览
+```
+.
+├── README.md             # 根目录说明（本文件）
+├── backend/              # Go + Gin 后端服务
+│   ├── main.go           # HTTP 入口、CORS、路由注册
+│   ├── db/db.go          # 数据库连接与 AutoMigrate
+│   ├── handlers/         # 业务控制器（文章与认证）
+│   ├── middleware/       # JWT 校验中间件
+│   ├── models/           # GORM 模型定义
+│   └── mini-blog.db      # SQLite 数据文件（运行时生成）
+└── front-end/            # React 单页应用
+    ├── src/              # 业务源码
+    │   ├── App.tsx       # 根组件与导航
+    │   ├── main.tsx      # 路由配置
+    │   ├── lib/api.ts    # API 封装与类型
+    │   └── components/   # 页面与 UI 组件
+    └── package.json
+```
+
+> 更细节的说明请参考 `backend/README.md` 与 `front-end/README.md`。
 
 ## 环境准备
-在开始前请确认：
-- 已安装 Node.js 20+ 与 pnpm 9+（推荐通过 corepack enable 安装）。
-- 已安装 Go 1.24.4 或以上版本。
-- 本地开放端口：前端默认 5173，后端默认 8080。
+- Node.js 20 或更高版本，建议执行 `corepack enable pnpm` 启用 pnpm 9。
+- Go 1.24 及以上。
+- SQLite 随 `gorm.io/driver/sqlite` 自动下载，无需额外安装。
+- 默认端口：前端 5173，后端 8080。
 
-## 快速启动
-1. 启动后端服务（终端 A）：
+## 本地快速体验
+1. 启动后端服务：
+   ```bash
+   cd backend
+   go run main.go
+   ```
+   首次运行会在 `backend/` 目录生成 `mini-blog.db` 并自动迁移 `Post`、`User` 模型。
 
-        cd backend
-        go run main.go
+2. 启动前端应用：
+   ```bash
+   cd front-end
+   pnpm install
+   pnpm dev
+   ```
+   打开 `http://127.0.0.1:5173/posts` 即可访问文章列表。
 
-   服务启动后在 http://127.0.0.1:8080 提供 REST API，并自动在当前目录创建或复用 mini-blog.db。
+保持两个终端同时运行，前端通过 `http://localhost:8080/api` 请求后端 API。
 
-2. 启动前端应用（终端 B）：
-
-        cd front-end
-        pnpm install
-        pnpm dev
-
-   浏览器访问 http://127.0.0.1:5173/posts，即可体验文章列表、详情与表单页面。
-
-提示：保持两个终端同时运行，前端会通过 http://localhost:8080/api 与后端交互。
-
-## 后端 API 总览
-| 方法 | 路径 | 说明 |
+## 常用命令速查
+| 目录 | 命令 | 说明 |
 | ---- | ---- | ---- |
-| GET | /api/posts | 获取文章列表 |
-| POST | /api/posts | 新建文章 |
-| GET | /api/posts/:id | 获取指定文章详情 |
-| PUT | /api/posts/:id | 更新文章（全量覆盖） |
-| DELETE | /api/posts/:id | 删除文章 |
+| `backend/` | `go run main.go` | 启动开发服务器 |
+| `backend/` | `go build -o mini-blog-server` | 构建可执行文件 |
+| `front-end/` | `pnpm dev` | 启动 Vite 开发服务器 |
+| `front-end/` | `pnpm build` | 打包静态文件到 `dist/` |
+| `front-end/` | `pnpm preview` | 本地预览生产构建 |
+| `front-end/` | `pnpm lint` | 运行 ESLint |
 
-默认返回的数据结构包含 id、title、description、content、author、image、createdAt、updatedAt 字段。更多参数说明与断言示例见 backend/README.md。
+## API 速览
+| 方法 | 路径 | 描述 | 请求体/响应 |
+| ---- | ---- | ---- | ---- |
+| POST | `/api/register` | 注册用户 | `{"username":"emma","password":"pass"}` → `{"message":"Registration successful"}` |
+| POST | `/api/login` | 登录返回 JWT | `{"username":"emma","password":"pass"}` → `{"token":"<jwt>"}` |
+| GET | `/api/posts` | 获取文章列表 | 返回 `Post[]` |
+| POST | `/api/posts` | 创建文章 | 需要 `Authorization` 头，返回新建 `Post` |
+| GET | `/api/posts/:id` | 获取文章详情 | 返回单个 `Post` |
+| PUT | `/api/posts/:id` | 更新文章 | 需要 `Authorization` 头，返回更新后的 `Post` |
+| DELETE | `/api/posts/:id` | 删除文章 | 需要 `Authorization` 头，返回 `{"message":"Post deleted"}` |
 
-## 数据流说明
-1. 前端通过 front-end/src/lib/api.ts 管理所有 HTTP 请求，统一处理异常。
-2. 组件（列表、详情、表单）在挂载时调用对应 API，并基于响应渲染界面。
-3. 后端使用 Gin 处理路由与中间件，通过 GORM 操作 SQLite 数据库，并在启动时自动迁移数据模型。
+> 当前示例后端已通过 `middleware.AuthMiddleware` 保护写操作，若要拓展权限策略可在 `backend/middleware` 目录继续增强。
 
-## 常见问题排查
-- 前端请求被拒绝：确认后端已启动并监听 8080 端口，或校验 api.ts 中的 API_URL 是否与实际地址一致。
-- SQLite 文件锁定：若进程异常退出，可删除 backend/mini-blog.db 后重启服务（注意数据将被清空）。
-- 端口冲突：可修改 vite.config.ts 或 main.go 中的监听端口。
+## 数据模型速记
+**Post**
+- `ID int` 自增主键
+- `Title string` 标题（必填）
+- `Description *string` 摘要（可空）
+- `Content string` Markdown 正文
+- `Author *string` 作者（可空）
+- `Image *string` 图片 URL（可空）
+- `CreatedAt/UpdatedAt time.Time` 自动维护
 
-## 下一步建议
-- 在测试或生产环境更换持久化数据库（如 MySQL 或 PostgreSQL），并补充鉴权、日志、配置中心等能力。
-- 补充自动化测试，例如 Vitest/Testing Library（前端）与 Go 的 net/http/httptest（后端）。
-- 调整 CORS 规则支持更多来源，或在生产中采用反向代理统一转发。
+**User**
+- `ID uint` 自增主键
+- `Username string` 唯一索引
+- `Password string` bcrypt 哈希，响应中省略
+- `CreatedAt/UpdatedAt time.Time`
 
-祝你编码顺利，更多细节请继续阅读子项目 README。
+## 可配置项
+- CORS：`backend/main.go` 中的 `config.AllowOrigins`、`AllowMethods`、`AllowHeaders`。
+- JWT 密钥：`backend/handlers/auth.go` 的 `jwtKey`，生产模式应改为读取环境变量。
+- 数据库：`backend/db/db.go` 默认使用 SQLite，可替换为 MySQL/PostgreSQL 驱动及 DSN。
+- API Base URL：`front-end/src/lib/api.ts` 的 `API_URL`，部署时调整为对应域名或代理路径。
+
+## 开发与部署建议
+- 后端：使用 `go build` 生成二进制，结合 systemd 或 Docker/Nginx 部署，并配置专用日志与密钥管理。
+- 前端：执行 `pnpm build` 后将 `front-end/dist` 托管到静态资源服务（Nginx、Vercel、Netlify 等）。
+- 反向代理：生产环境推荐将前端与后端置于同一域名，通过代理转发 `/api` 请求以简化 CORS。
+
+## 下一步可以做什么
+- 细化 JWT 中间件策略，例如按作者或角色区分写操作权限。
+- 编写 Go `httptest`、Vitest/Testing Library 测试，保障核心流程。
+- 扩展文章分页、标签、草稿箱等高级功能。
+- 引入全局状态管理或 React Query 同步用户信息。
+- 添加国际化、多主题或富文本编辑器等用户体验提升。

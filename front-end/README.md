@@ -1,78 +1,92 @@
 # Mini Blog 前端
 
-基于 Vite 构建的 React 19 单页应用，涵盖文章列表、详情和表单三类核心页面，演示如何在同一代码库内完成前后端分离开发。
+基于 Vite 7 与 React 19 构建的单页博客应用，负责呈现文章列表、详情页、创建编辑表单以及登录/注册流程。通过 `fetch` 调用 Go 后端接口，完成整套 CRUD 与认证体验。
 
-## 快速了解
-- 技术栈：React 19、TypeScript 5.8、React Router 7、Vite 7、Tailwind CSS 4。
-- 数据来源：后端服务默认运行在 http://localhost:8080，通过 REST 接口提供文章数据。
-- 构建目标：pnpm build 产出位于 dist 目录的静态资源，可部署到任意支持静态文件托管的环境。
+## 功能亮点
+- 路由驱动：React Router 7 维护多路由 SPA，支持文章列表、文章详情、编辑、登录与注册等页面。
+- Markdown 展示：`react-markdown` 搭配 `remark-gfm` 渲染 Markdown 正文与摘要，支持表格、列表等 GFM 语法。
+- 图片体验：详情页与列表中的图片支持点击放大，`ImageModal` 组件负责遮罩与滚动锁定。
+- 认证集成：登录成功后写入 `localStorage`，写操作自动携带 `Authorization: Bearer <token>` 请求头，登出时清除并刷新状态。
+- 样式体系：Tailwind CSS 4 原子类搭配自定义工具类，快速构建浅色主题界面。
 
-## 前置条件
-- Node.js 20 或更高版本（建议使用 corepack 管理 pnpm）。
-- pnpm 9（执行 corepack enable pnpm 或 npm install -g pnpm）。
-- 已启动后端服务，或确保 front-end/src/lib/api.ts 中的 API_URL 指向可用接口地址。
+## 环境要求
+- Node.js 20 或更新版本。
+- pnpm 9（建议执行 `corepack enable pnpm`）。
+- 后端服务默认运行在 `http://localhost:8080/api`，请先启动 `backend/`。
 
-## 安装与常用脚本
-在仓库根目录打开终端后执行：
+## 安装与启动
+```bash
+cd front-end
+pnpm install
+pnpm dev
+```
+开发服务器默认监听 `http://127.0.0.1:5173`，支持热更新。
 
-        cd front-end
-        pnpm install
-
-常用脚本如下：
-
-| 脚本 | 说明 |
+## 可用脚本
+| 命令 | 描述 |
 | ---- | ---- |
-| pnpm dev | 启动开发服务器（默认端口 5173），支持热更新与路由回退 |
-| pnpm build | 运行 TypeScript 编译与 Vite 打包，输出到 dist 目录 |
-| pnpm preview | 启动本地静态预览，模拟生产构建后的访问效果 |
-| pnpm lint | 使用 ESLint 进行代码质量检查 |
+| `pnpm dev` | 启动 Vite 开发服务器 |
+| `pnpm build` | TypeScript 项目引用检查 + Vite 打包，产物位于 `dist/` |
+| `pnpm preview` | 以本地静态服务器预览生产构建 |
+| `pnpm lint` | 使用 ESLint 进行语法与风格检查 |
 
-## 目录结构速览
-    front-end/
-    ├── README.md            # 本说明文档
-    ├── src/
-    │   ├── App.tsx          # 应用框架与导航
-    │   ├── main.tsx         # 入口文件，挂载 RouterProvider
-    │   ├── components/
-    │   │   ├── PostList.tsx    # 文章列表和删除逻辑
-    │   │   ├── PostDetail.tsx  # 文章详情与 Markdown 渲染
-    │   │   └── PostForm.tsx    # 创建与编辑表单
-    │   └── lib/api.ts       # 对后端接口的封装
-    ├── index.html
-    ├── package.json
-    └── vite.config.ts
+## 目录结构
+```
+src/
+├── main.tsx            # React 入口 & 路由表
+├── App.tsx             # 顶部导航 + Outlet 容器
+├── index.css           # Tailwind 引导与全局样式
+├── lib/
+│   └── api.ts          # API URL、类型定义与 fetch 封装
+└── components/
+    ├── PostList.tsx    # 列表页，支持删除、缩略图展示
+    ├── PostDetail.tsx  # 详情页，Markdown 渲染与图片放大
+    ├── PostForm.tsx    # 新建/编辑表单共用组件
+    ├── Login.tsx       # 登录表单，提交后存储 token
+    ├── Register.tsx    # 注册表单
+    └── ImageModal.tsx  # 图片放大遮罩
+```
 
-## 路由与页面说明
-- 根路由使用 App.tsx 提供统一的导航和布局。
-- main.tsx 中定义 BrowserRouter：
-  - /posts （以及 /）映射到 PostList.tsx。
-  - /posts/new 映射到 PostForm.tsx，进入创建模式。
-  - /posts/edit/:id 同样复用 PostForm.tsx，但会在挂载时加载现有数据。
-  - /posts/:id 映射到 PostDetail.tsx，并通过 URL 参数请求文章详情。
+## 路由与页面
+`src/main.tsx` 使用 `createBrowserRouter` 定义以下路由：
+- `/`、`/posts`：文章列表。
+- `/posts/new`：创建文章。
+- `/posts/edit/:id`：编辑文章，加载已有数据填充表单。
+- `/posts/:id`：文章详情页。
+- `/login`、`/register`：认证入口。
 
-## 数据请求与错误处理
-- front-end/src/lib/api.ts 统一维护 Post 类型定义和全部请求函数（getPosts、getPostById、createPost、editPost、deletePost）。
-- handleResponse 针对非 2xx 响应抛出 Error，并优先解析返回体的 error 字段，保证组件侧能展示清晰提示。
-- 组件按需调用这些函数，并结合 useState 与 useEffect 管理加载状态。
+`App.tsx` 负责导航栏、登录态按钮切换与登出逻辑（清除 token 并重载页面）。
 
-## 样式体系
-- Tailwind CSS 4 以原子类覆盖布局与主题，无需单独配置 tailwind.config.js（Vite 插件已内置）。
-- index.css 中可放置全局覆写，例如字体或背景色。
-- 表单和按钮示例展示了浅色与深色模式的兼容写法，可根据需要扩展。
+## 数据获取与状态
+- `lib/api.ts` 定义 `API_URL`（默认 `http://localhost:8080/api`）、`Post` 类型，以及 `getPosts`、`createPost` 等封装函数。
+- API 封装统一处理响应，通过 `handleResponse` 抛出错误信息，组件内以 `alert` 或局部文案提示用户。
+- 组件内部主要使用 `useState`、`useEffect` 管理局部状态，无额外全局状态库。
+- 删除、编辑后会在客户端更新列表或导航至文章详情，保持界面同步。
 
-## 与后端联调
-- 默认允许来自 http://localhost:5173 的跨域请求，确保后端 main.go 中的 CORS 配置与前端端口一致。
-- 如果需要连接远程接口，修改 front-end/src/lib/api.ts 的 API_URL 常量并重启开发服务器。
-- 注意在删除或编辑文章时的窗口确认，这些交互直接调用后端接口，建议先在本地数据库中测试。
+## 样式与交互细节
+- Tailwind 原子类搭配少量自定义类名（如统一的 `inputClasses`），保持表单与按钮风格一致。
+- 详情页在模态框开启时给 `body` 添加 `overflow-hidden`，避免滚动穿透。
+- `ImageModal` 通过比较 `event.target` 与 `event.currentTarget` 判定是否点击遮罩区域，从而决定关闭弹窗。
 
-## 构建与部署建议
-1. 执行 pnpm build 生成 dist 目录。
-2. 将 dist 内容上传到任意静态资源服务（Nginx、Vercel、Netlify 等）。
-3. 部署到自有服务器时，可通过 Nginx 反向代理将 /api 请求转发到后端服务，避免浏览器跨域问题。
+## 构建与部署
+```bash
+pnpm build
+```
+完成后产物位于 `dist/`，可部署到任意静态资源托管（Nginx、Vercel、Netlify 等）。上线前请确保：
+- `API_URL` 指向线上后端域名或网关。
+- 后端 CORS 允许前端部署域名，或通过反向代理避免跨域。
+- 若提供 https 服务，请同步更新后端地址为 https。
 
-## 代码质量与扩展方向
-- 当前未引入单元测试，可根据需求选择 Vitest 或 React Testing Library。
-- 建议为 API 层补充错误监控与重试策略，并结合 Suspense 或全局状态管理系统（如 Zustand）优化数据共享。
-- 如需国际化或深色模式开关，可在 App.tsx 中扩展全局上下文。
+## 调试建议
+- 若调用接口失败，请确认后端是否已启动并监听 8080 端口。
+- 401/403 多为 token 过期或缺失，可尝试重新登录。
+- 遇到端口冲突可修改 `vite.config.ts` 中的 `server.port`，或执行 `pnpm dev --port 5174`。
 
-祝开发顺利，更多问题欢迎查看根目录 README 或后端文档。
+## 后续扩展方向
+- 使用 React Query、Zustand 或 Redux Toolkit 缓存文章与用户信息。
+- 借助 React Hook Form、Zod 提升表单校验与用户体验。
+- 引入 Vitest + Testing Library 编写页面与组件测试。
+- 添加分页、标签、搜索、草稿箱等高级功能。
+- 支持主题切换、多语言、本地草稿缓存等增强特性。
+
+> 更多关于 API 与系统架构的细节，请查阅根目录 `README.md` 及 `backend/README.md`。
