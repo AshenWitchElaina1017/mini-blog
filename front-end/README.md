@@ -1,87 +1,78 @@
-### 安装环境
-```
-pnpm create vite
-pnpm install react-router-dom react-markdown
-pnpm install -D tailwindcss @tailwindcss/vite
-```
+# Mini Blog 前端
 
-### 推荐的组件开发顺序：
+基于 Vite 构建的 React 19 单页应用，涵盖文章列表、详情和表单三类核心页面，演示如何在同一代码库内完成前后端分离开发。
 
-1.  **`PostList.tsx` (文章列表页)** - **核心数据展示**
-2.  **`PostDetail.tsx` (文章详情页)** - **带参数的路由与单个数据展示**
-3.  **`PostForm.tsx` (文章表单页)** - **用户输入与数据修改**
+## 快速了解
+- 技术栈：React 19、TypeScript 5.8、React Router 7、Vite 7、Tailwind CSS 4。
+- 数据来源：后端服务默认运行在 http://localhost:8080，通过 REST 接口提供文章数据。
+- 构建目标：pnpm build 产出位于 dist 目录的静态资源，可部署到任意支持静态文件托管的环境。
 
----
+## 前置条件
+- Node.js 20 或更高版本（建议使用 corepack 管理 pnpm）。
+- pnpm 9（执行 corepack enable pnpm 或 npm install -g pnpm）。
+- 已启动后端服务，或确保 front-end/src/lib/api.ts 中的 API_URL 指向可用接口地址。
 
-### 第一步：先写 `PostList.tsx` (文章列表页)
+## 安装与常用脚本
+在仓库根目录打开终端后执行：
 
-**为什么先写它？**
+        cd front-end
+        pnpm install
 
-* **应用的入口**：文章列表页是用户进入应用后最先看到的核心页面。构建它，就等于构建了应用的“门面”。
-* **验证核心流程**：这个组件的核心任务是从后端 API (`/api/posts`) 获取数据并展示出来。写好它，就意味着你已经打通了**前端与后端的通信链路**，这是整个项目能正常工作的基石。
-* **复杂度最低**：它主要处理“读取”操作（Read），不涉及复杂的用户输入和表单状态管理。这使得你可以专注于数据获取、状态管理（加载中、成功、失败）和列表渲染，是一个完美的起点。
+常用脚本如下：
 
-**在写 `PostList.tsx` 时，你的任务清单：**
+| 脚本 | 说明 |
+| ---- | ---- |
+| pnpm dev | 启动开发服务器（默认端口 5173），支持热更新与路由回退 |
+| pnpm build | 运行 TypeScript 编译与 Vite 打包，输出到 dist 目录 |
+| pnpm preview | 启动本地静态预览，模拟生产构建后的访问效果 |
+| pnpm lint | 使用 ESLint 进行代码质量检查 |
 
-1.  **搭建基本结构**：创建一个函数组件，返回一个包含标题（“文章列表”）和列表容器 (`<ul>`) 的 JSX 结构。
-2.  **管理状态**：使用 `useState` 创建三个状态：
-    * `posts`：用于存储从 API 获取的文章数组，初始值为空数组 `[]`。
-    * `loading`：布尔值，表示数据是否正在加载中，初始值为 `true`。
-    * `error`：字符串或 `null`，用于存储请求失败时的错误信息。
-3.  **请求数据**：使用 `useEffect` 钩子，在组件首次加载时，调用 `lib/api.ts` 中的 `fetchPosts` 函数去获取数据。
-    * 在请求成功后，用返回的数据更新 `posts` 状态，并将 `loading` 设为 `false`。
-    * 在请求失败后，更新 `error` 状态，并将 `loading` 设为 `false`。
-4.  **条件渲染**：
-    * 当 `loading` 为 `true` 时，显示“加载中...”。
-    * 当 `error` 有值时，显示错误信息。
-    * 当数据成功加载后，使用 `.map()` 方法遍历 `posts` 数组，渲染出每一篇文章的标题和链接。
-5.  **添加交互**：
-    * 为每篇文章的标题添加一个 `<Link>` 组件（来自 `react-router-dom`），指向详情页，例如 `/posts/${post.id}`。
-    * 添加一个“新建文章”的按钮，链接到 `/posts/new`。
+## 目录结构速览
+    front-end/
+    ├── README.md            # 本说明文档
+    ├── src/
+    │   ├── App.tsx          # 应用框架与导航
+    │   ├── main.tsx         # 入口文件，挂载 RouterProvider
+    │   ├── components/
+    │   │   ├── PostList.tsx    # 文章列表和删除逻辑
+    │   │   ├── PostDetail.tsx  # 文章详情与 Markdown 渲染
+    │   │   └── PostForm.tsx    # 创建与编辑表单
+    │   └── lib/api.ts       # 对后端接口的封装
+    ├── index.html
+    ├── package.json
+    └── vite.config.ts
 
-完成这一步后，你的应用就已经具备了核心的展示功能，并且验证了前后端可以正常通信。
+## 路由与页面说明
+- 根路由使用 App.tsx 提供统一的导航和布局。
+- main.tsx 中定义 BrowserRouter：
+  - /posts （以及 /）映射到 PostList.tsx。
+  - /posts/new 映射到 PostForm.tsx，进入创建模式。
+  - /posts/edit/:id 同样复用 PostForm.tsx，但会在挂载时加载现有数据。
+  - /posts/:id 映射到 PostDetail.tsx，并通过 URL 参数请求文章详情。
 
----
+## 数据请求与错误处理
+- front-end/src/lib/api.ts 统一维护 Post 类型定义和全部请求函数（getPosts、getPostById、createPost、editPost、deletePost）。
+- handleResponse 针对非 2xx 响应抛出 Error，并优先解析返回体的 error 字段，保证组件侧能展示清晰提示。
+- 组件按需调用这些函数，并结合 useState 与 useEffect 管理加载状态。
 
-### 第二步：接着写 `PostDetail.tsx` (文章详情页)
+## 样式体系
+- Tailwind CSS 4 以原子类覆盖布局与主题，无需单独配置 tailwind.config.js（Vite 插件已内置）。
+- index.css 中可放置全局覆写，例如字体或背景色。
+- 表单和按钮示例展示了浅色与深色模式的兼容写法，可根据需要扩展。
 
-**为什么是它？**
+## 与后端联调
+- 默认允许来自 http://localhost:5173 的跨域请求，确保后端 main.go 中的 CORS 配置与前端端口一致。
+- 如果需要连接远程接口，修改 front-end/src/lib/api.ts 的 API_URL 常量并重启开发服务器。
+- 注意在删除或编辑文章时的窗口确认，这些交互直接调用后端接口，建议先在本地数据库中测试。
 
-* **自然的流程延伸**：用户在列表页点击一篇文章，自然会进入详情页。这个组件是 `PostList` 功能的直接延续。
-* **学习路由参数**：它会让你练习使用 `react-router-dom` 的 `useParams` 钩子来从 URL 中获取动态参数（文章的 `id`），这是开发复杂应用必备的技能。
-* **处理单个数据**：与列表页不同，这里你将练习如何获取和展示**单个**数据对象。
+## 构建与部署建议
+1. 执行 pnpm build 生成 dist 目录。
+2. 将 dist 内容上传到任意静态资源服务（Nginx、Vercel、Netlify 等）。
+3. 部署到自有服务器时，可通过 Nginx 反向代理将 /api 请求转发到后端服务，避免浏览器跨域问题。
 
-**在写 `PostDetail.tsx` 时，你的任务清单：**
+## 代码质量与扩展方向
+- 当前未引入单元测试，可根据需求选择 Vitest 或 React Testing Library。
+- 建议为 API 层补充错误监控与重试策略，并结合 Suspense 或全局状态管理系统（如 Zustand）优化数据共享。
+- 如需国际化或深色模式开关，可在 App.tsx 中扩展全局上下文。
 
-1.  **获取路由参数**：在组件内部，使用 `useParams()` 获取 URL 中的 `id`。
-2.  **请求数据**：与 `PostList` 类似，使用 `useEffect`，但这次是调用 `fetchPost(id)` 来获取单篇文章的数据。同时也要管理好 `loading` 和 `error` 状态。
-3.  **渲染内容**：
-    * 展示文章的标题 (`post.title`) 和创建时间 (`post.createdAt`)。
-    * **关键**：使用 `react-markdown` 组件来渲染文章内容 (`post.content`)，将 Markdown 文本转换成格式化的 HTML。
-
----
-
-### 第三步：最后写 `PostForm.tsx` (文章表单页)
-
-**为什么最后写它？**
-
-* **复杂度最高**：这个组件涉及“创建”（Create）和“更新”（Update）操作，是所有组件中逻辑最复杂的。它包括：
-    * 用户输入和表单元素绑定。
-    * 管理表单状态（`title` 和 `content`）。
-    * 条件逻辑（判断是“新建”还是“编辑”模式）。
-    * 表单提交处理（调用 `createPost` 或 `updatePost` API）。
-    * 提交后的页面跳转。
-* **依赖其他页面**：表单提交成功后，通常需要跳转回详情页或列表页。先写好那些页面，可以让这里的跳转逻辑更顺畅。
-
-**在写 `PostForm.tsx` 时，你的任务清单：**
-
-1.  **模式判断**：使用 `useParams` 获取 `id`。如果 `id` 存在，则为“编辑模式”；否则为“新建模式”。
-2.  **数据加载（编辑模式）**：如果是编辑模式，需要先用 `useEffect` 调用 `fetchPost(id)` 获取现有数据，并填充到表单中。
-3.  **状态管理**：使用 `useState` 管理 `title` 和 `content` 两个输入框的值。
-4.  **表单提交逻辑**：
-    * 创建一个 `handleSubmit` 函数。
-    * 在函数内部，阻止表单的默认提交行为。
-    * 根据是新建还是编辑模式，调用对应的 API 函数。
-    * 使用 `useNavigate` 钩子，在 API 调用成功后，将用户重定向到合适的页面。
-
-通过这个顺序，你可以平滑地提升开发难度，每一步都建立在前一步成功的基础上，让整个重写过程更加有条理和高效。祝你编码愉快！
+祝开发顺利，更多问题欢迎查看根目录 README 或后端文档。
