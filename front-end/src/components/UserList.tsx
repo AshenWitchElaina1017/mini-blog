@@ -1,10 +1,13 @@
 import { useEffect, useState } from 'react';
-import { getUsers, promoteUser, type User } from '../lib/api';
+import { getUsers, promoteUser, demoteUser, type User } from '../lib/api';
 import { notificationService } from '../lib/notification';
+import { useAuthStore } from '../lib/store';
 
 export default function UserList() {
   const [users, setUsers] = useState<User[]>([]);
   const [error, setError] = useState('');
+  // 从 Zustand store 中获取当前登录的用户信息
+  const currentUser = useAuthStore((state) => state.currentUser);
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -26,6 +29,21 @@ export default function UserList() {
         const updatedUser = await promoteUser(id);
         setUsers(users.map((user) => (user.id === id ? updatedUser : user)));
         notificationService.show('提权成功', 'success');
+      } catch (err) {
+        notificationService.show('操作失败: ' + (err as Error).message, 'error');
+      }
+    }
+  };
+  
+  // 新增 handleDemote 函数，用于处理降级逻辑
+  const handleDemote = async (id: number) => {
+    if (window.confirm('确定要将该管理员降为普通用户吗？')) {
+      try {
+        // 调用 demoteUser API
+        const updatedUser = await demoteUser(id);
+        // 更新本地 state
+        setUsers(users.map((user) => (user.id === id ? updatedUser : user)));
+        notificationService.show('降级成功', 'success');
       } catch (err) {
         notificationService.show('操作失败: ' + (err as Error).message, 'error');
       }
@@ -75,10 +93,19 @@ export default function UserList() {
                     <span className={roleClasses}>{user.role}</span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{new Date(user.createdAt).toLocaleDateString()}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-4">
                     {user.role !== 'admin' && (
                       <button onClick={() => void handlePromote(user.id)} className="text-indigo-600 hover:text-indigo-900">
                         提升为管理员
+                      </button>
+                    )}
+                    {/* 添加降级按钮的条件渲染逻辑 */}
+                    {/* 1. 当前登录用户是超级管理员 (ID=1) */}
+                    {/* 2. 列表中的这个用户是管理员 */}
+                    {/* 3. 列表中的这个用户不是超级管理员自己 */}
+                    {currentUser?.id === 1 && user.role === 'admin' && user.id !== 1 && (
+                       <button onClick={() => void handleDemote(user.id)} className="text-red-600 hover:text-red-900 hover:cursor-pointer">
+                        降为普通用户
                       </button>
                     )}
                   </td>
@@ -91,4 +118,3 @@ export default function UserList() {
     </div>
   );
 }
-

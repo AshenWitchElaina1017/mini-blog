@@ -41,6 +41,8 @@ func main() {
 		{
 			admin.GET("/users", handlers.GetUsers)
 			admin.POST("/users/:id/promote", handlers.PromoteUser)
+			// 添加降级用户的路由
+			admin.POST("/users/:id/demote", handlers.DemoteUser)
 		}
 	}
 

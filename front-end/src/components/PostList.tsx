@@ -1,14 +1,16 @@
 import Markdown from 'react-markdown';
 import { Link, useParams } from 'react-router-dom';
-import { type Post, getPosts, deletePost, type User, getPostsByTag } from '../lib/api';
+import { type Post, getPosts, deletePost, getPostsByTag } from '../lib/api';
 import { useEffect, useMemo, useState } from 'react';
 import remarkGfm from 'remark-gfm';
 import { notificationService } from '../lib/notification';
+import { useAuthStore } from '../lib/store';
 
 export default function PostList() {
   const { tagName } = useParams<{ tagName: string }>();
   const [articles, setArticles] = useState<Post[]>([]);
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  // 从 store 获取当前用户信息
+  const currentUser = useAuthStore((state) => state.currentUser);
   const [sortKey, setSortKey] = useState('default');
   const [isLoading, setIsLoading] = useState(true);
 
@@ -23,11 +25,6 @@ export default function PostList() {
         notificationService.show('获取文章失败: ' + (error as Error).message, 'error');
       })
       .finally(() => setIsLoading(false));
-
-    const userJson = localStorage.getItem('user');
-    if (userJson) {
-      setCurrentUser(JSON.parse(userJson));
-    }
   }, [tagName]);
 
   const sortedArticles = useMemo(() => {
@@ -174,4 +171,3 @@ export default function PostList() {
     </div>
   );
 }
-

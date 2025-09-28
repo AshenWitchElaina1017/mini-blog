@@ -1,7 +1,8 @@
 import { type ChangeEvent, type FormEvent, useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { createPost, editPost, getPostById, type User } from '../lib/api';
+import { createPost, editPost, getPostById } from '../lib/api';
 import { notificationService } from '../lib/notification';
+import { useAuthStore } from '../lib/store';
 
 type FormState = {
   title: string;
@@ -16,6 +17,8 @@ type FormState = {
 export default function PostForm() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  // 从 store 获取当前用户信息
+  const currentUser = useAuthStore((state) => state.currentUser);
   const [formData, setFormData] = useState<FormState>({
     title: '',
     description: '',
@@ -25,16 +28,11 @@ export default function PostForm() {
     weight: 0,
     tags: '',
   });
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const isEditMode = Boolean(id);
 
   useEffect(() => {
-    const userJson = localStorage.getItem('user');
-    const user = userJson ? (JSON.parse(userJson) as User) : null;
-    setCurrentUser(user);
-
     if (isEditMode && id) {
       getPostById(id)
         .then((post) => {
@@ -54,15 +52,15 @@ export default function PostForm() {
         })
         .finally(() => setIsLoading(false));
     } else {
-      if (user) {
+      if (currentUser) {
         setFormData((prevData) => ({
           ...prevData,
-          author: user.username,
+          author: currentUser.username,
         }));
       }
       setIsLoading(false);
     }
-  }, [id, isEditMode]);
+  }, [id, isEditMode, currentUser]);
 
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;
@@ -271,4 +269,3 @@ export default function PostForm() {
     </div>
   );
 }
-

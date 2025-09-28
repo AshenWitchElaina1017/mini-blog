@@ -1,10 +1,13 @@
 import { type FormEvent, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { login } from '../lib/api';
+import { login as apiLogin } from '../lib/api';
 import { notificationService } from '../lib/notification';
+import { useAuthStore } from '../lib/store';
 
 export default function Login() {
   const navigate = useNavigate();
+  // 从 store 中获取 login 方法，注意这里我们只获取 action
+  const loginAction = useAuthStore((state) => state.login);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -16,11 +19,14 @@ export default function Login() {
     setIsSubmitting(true);
 
     try {
-      const data = await login({ username, password });
-      localStorage.setItem('token', data.token);
-      localStorage.setItem('user', JSON.stringify(data.user));
+      // 调用 API 进行登录
+      const data = await apiLogin({ username, password });
+      // 调用 store 的 action 来更新状态并持久化 token
+      loginAction(data.user, data.token);
       notificationService.show('登录成功！', 'success');
+      // 导航到文章列表页
       navigate('/posts');
+      // 重新加载页面以确保所有组件（包括导航栏）都获得最新的登录状态
       window.location.reload();
     } catch (err) {
       console.error('登录失败:', err);
@@ -85,4 +91,3 @@ export default function Login() {
     </div>
   );
 }
-

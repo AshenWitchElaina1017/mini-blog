@@ -4,6 +4,7 @@ import (
 	"backend/db"
 	"backend/models"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -126,5 +127,57 @@ func PromoteUser(c *gin.Context) {
 	user.Role = "admin"
 	db.DB.Save(&user)
 
+	c.JSON(http.StatusOK, user)
+}
+
+// DemoteUser 将指定用户降级为普通用户
+// @Summary 降级用户
+// @Description 只有超级管理员 (ID=1) 才能将其他管理员降级为普通用户
+// @Accept  json
+// @Produce  json
+// @Param id path int true "用户 ID"
+// @Success 200 {object} models.User
+// @Failure 400 {object} gin.H "请求错误"
+// @Failure 401 {object} gin.H "认证失败"
+// @Failure 403 {object} gin.H "权限不足"
+// @Failure 404 {object} gin.H "用户未找到"
+// @Router /admin/users/{id}/demote [post]
+func DemoteUser(c *gin.Context) {
+	// 从中间件获取当前操作者的用户ID
+	requestingUserID := c.MustGet("userID").(uint)
+
+	// 检查操作者是否是超级管理员 (ID=1)
+	if requestingUserID != 1 {
+		c.JSON(http.StatusForbidden, gin.H{"error": "无权操作，仅超级管理员可执行此操作"})
+		c.Abort()
+		return
+	}
+
+	// 获取要降级的用户的ID
+	idStr := c.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "无效的用户ID"})
+		return
+	}
+
+	// 检查是否试图降级超级管理员自己
+	if uint(id) == requestingUserID {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "不能降级超级管理员"})
+		return
+	}
+
+	// 查找目标用户
+	var user models.User
+	if err := db.DB.First(&user, id).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		return
+	}
+
+	// 执行降级操作
+	user.Role = "user"
+	db.DB.Save(&user)
+
+	// 返回更新后的用户信息
 	c.JSON(http.StatusOK, user)
 }

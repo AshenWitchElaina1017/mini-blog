@@ -122,6 +122,16 @@ export const promoteUser = async (id: number | string): Promise<User> => {
   }).then(handleResponse);
 };
 
+// demoteUser 函数，用于请求后端降级用户接口
+export const demoteUser = async (id: number | string): Promise<User> => {
+  // 向 /admin/users/:id/demote 发送 POST 请求
+  return fetch(API_URL + '/admin/users/' + id + '/demote', {
+    method: 'POST',
+    // 包含认证头
+    headers: { ...getAuthHeaders() },
+  }).then(handleResponse); // 处理响应
+};
+
 export const getTags = async (): Promise<Tag[]> => {
   return fetch(API_URL + '/tags').then(handleResponse);
 };
@@ -129,4 +139,3 @@ export const getTags = async (): Promise<Tag[]> => {
 export const getPostsByTag = async (tagName: string): Promise<Post[]> => {
   return fetch(API_URL + '/posts/tag/' + encodeURIComponent(tagName)).then(handleResponse);
 };
-

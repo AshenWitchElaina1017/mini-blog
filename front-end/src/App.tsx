@@ -1,28 +1,20 @@
 import { Link, Outlet, useNavigate } from 'react-router-dom';
-import { useEffect, useState } from 'react';
-import { type User } from './lib/api';
 import Notification from './components/Notification';
 import { notificationService } from './lib/notification';
+import { useAuthStore } from './lib/store';
 
 export default function App() {
   const navigate = useNavigate();
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
-
-  useEffect(() => {
-    const userJson = localStorage.getItem('user');
-    if (userJson) {
-      setCurrentUser(JSON.parse(userJson));
-    }
-  }, []);
+  // 从 Zustand store 中获取当前用户和退出登录的方法
+  const { currentUser, logout } = useAuthStore();
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
+    // 调用 store 中的 logout 方法
+    logout();
     notificationService.show('已成功退出登录', 'success');
-    setCurrentUser(null);
     navigate('/login');
   };
-  
+
   return (
     <div className="min-h-screen bg-neutral-50 text-neutral-900">
       <Notification />
@@ -32,7 +24,7 @@ export default function App() {
             E.M的博客
           </Link>
           <div className="flex gap-4 text-sm font-medium">
-            <Link to="/posts" className="rounded bg-green-600 px-3 py-1 text-white hover:bg-green-500">
+            <Link to="/posts" className="rounded bg-red-600 px-3 py-1 text-white hover:bg-red-500">
               所有文章
             </Link>
             {currentUser ? (
@@ -60,7 +52,7 @@ export default function App() {
               </>
             ) : (
               <>
-                <Link to="/login" className="text-neutral-700 hover:text-blue-600">
+                <Link to="/login" className="rounded bg-sky-600 px-3 py-1 text-white hover:bg-sky-500">
                   登录
                 </Link>
                 <Link
@@ -80,4 +72,3 @@ export default function App() {
     </div>
   );
 }
-
