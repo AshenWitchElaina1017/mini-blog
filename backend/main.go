@@ -21,12 +21,13 @@ func main() {
 	router.Use(cors.New(config))
 	api := router.Group("/api")
 	{
-		// --- 公开路由 (Public Routes) ---
 		api.POST("/register", handlers.Register)
 		api.POST("/login", handlers.Login)
 		api.GET("/posts", handlers.GetPosts)
 		api.GET("/posts/:id", handlers.GetPost)
-		// --- 受保护的路由 (Protected Routes) ---
+		api.GET("/tags", handlers.GetTags)
+		api.GET("/posts/tag/:name", handlers.GetPostsByTag)
+
 		authorized := api.Group("/")
 		authorized.Use(middleware.AuthMiddleware())
 		{
@@ -34,6 +35,14 @@ func main() {
 			authorized.PUT("/posts/:id", handlers.UpdatePost)
 			authorized.DELETE("/posts/:id", handlers.DeletePost)
 		}
+
+		admin := api.Group("/admin")
+		admin.Use(middleware.AuthMiddleware(), middleware.AdminMiddleware())
+		{
+			admin.GET("/users", handlers.GetUsers)
+			admin.POST("/users/:id/promote", handlers.PromoteUser)
+		}
 	}
+
 	router.Run()
 }

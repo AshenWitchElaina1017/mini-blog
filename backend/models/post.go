@@ -5,13 +5,15 @@ import (
 )
 
 type Post struct {
-	// gorm.Model
-	ID        int       `json:"id" gorm:"primaryKey"` // 帖子的唯一标识符
-	Title     string    `json:"title"`                // 帖子的标题
-	Description *string    `json:"description"`          // 帖子的描述
-	Content   string    `json:"content"`              // 帖子的内容
-	Author    *string   `json:"author,omitempty"`     // 作者的ID
-	Image     *string   `json:"image,omitempty"`      // 帖子的图片链接
-	CreatedAt time.Time `json:"createdAt"`            // 记录创建时间
-	UpdatedAt time.Time `json:"updatedAt"`            // 记录最后更新时间
+	ID          int       `json:"id" gorm:"primaryKey"`
+	Title       string    `json:"title"`
+	Description *string   `json:"description"`
+	Content     string    `json:"content"`
+	UserID      uint      `json:"userId"`
+	Author      string    `json:"author"`
+	Image       *string   `json:"image,omitempty"`
+	Weight      int       `json:"weight" gorm:"default:0"`
+	CreatedAt   time.Time `json:"createdAt"`
+	UpdatedAt   time.Time `json:"updatedAt"`
+	Tags        []*Tag    `json:"tags" gorm:"many2many:post_tags;"`
 }

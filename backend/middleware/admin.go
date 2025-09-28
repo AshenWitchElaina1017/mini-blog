@@ -9,7 +9,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-func AuthMiddleware() gin.HandlerFunc {
+func AdminMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" {
@@ -37,9 +37,11 @@ func AuthMiddleware() gin.HandlerFunc {
 			return
 		}
 
-		c.Set("userID", claims.UserID)
-		c.Set("username", claims.Username)
-		c.Set("userRole", claims.Role)
+		if claims.Role != "admin" {
+			c.JSON(http.StatusForbidden, gin.H{"error": "无权访问，需要管理员权限"})
+			c.Abort()
+			return
+		}
 
 		c.Next()
 	}
