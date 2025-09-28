@@ -78,7 +78,7 @@ export default function PostDetail() {
         </div>
       )}
       <div className="max-w-3xl mx-auto">
-        <h1 className="text-4xl font-extrabold text-zinc-900 mb-4 tracking-tight">{post.title}</h1>
+        {/* <h1 className="text-4xl font-extrabold text-zinc-900 mb-4 tracking-tight">{post.title}</h1> */}
         <div className="text-sm text-gray-500 mb-8 border-b pb-4">
             <span>作者: {post.author || '匿名'}</span>
             <span className="mx-2">·</span>
