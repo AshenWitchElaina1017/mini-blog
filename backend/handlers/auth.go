@@ -4,7 +4,6 @@ import (
 	"backend/db"
 	"backend/models"
 	"net/http"
-	"os"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -12,20 +11,11 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-// // 定义一个私有的密钥，用于JWT签名。在生产环境中应从环境变量获取！
-// var jwtKey = []byte("your_secret_key")
-// func GetJwtKey() []byte {
-// 	return jwtKey
-// }
+// 定义一个私有的密钥，用于JWT签名。在生产环境中应从环境变量获取！
+var jwtKey = []byte("your_secret_key")
 
-// 将 var jwtKey = []byte("your_secret_key") 修改为：
 func GetJwtKey() []byte {
-	key := os.Getenv("JWT_SECRET")
-	if key == "" {
-		// 提供一个默认值用于本地开发
-		key = "majo_elaina_1017"
-	}
-	return []byte(key)
+	return jwtKey
 }
 
 // Claims 定义了 JWT 的载荷结构
