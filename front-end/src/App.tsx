@@ -16,7 +16,7 @@ export default function App() {
             E.M的博客
           </Link>
           <div className="flex gap-4 text-sm font-medium">
-            <Link to="/posts" className="text-neutral-700 hover:text-blue-600">
+            <Link to="/posts" className="rounded bg-green-600 px-3 py-1 text-white hover:bg-green-500">
               所有文章
             </Link>
             {token ? (
