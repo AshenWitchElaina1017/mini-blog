@@ -4,6 +4,9 @@ import ReactMarkdown from 'react-markdown';
 import { getPostById, type Post } from '../lib/api';
 import remarkGfm from 'remark-gfm';
 import ImageModal from './ImageModal';
+// 导入语法高亮组件和样式
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
 export default function PostDetail() {
   const { id } = useParams<{ id: string }>();
@@ -127,6 +130,7 @@ export default function PostDetail() {
               <ReactMarkdown
                 remarkPlugins={[remarkGfm]}
                 components={{
+                  // 自定义 `img` 渲染器，添加点击放大功能
                   img: ({ node: _node, ...props }) => (
                     <img
                       {...props}
@@ -134,25 +138,41 @@ export default function PostDetail() {
                       onClick={() => handleImageClick(props.src!)}
                     />
                   ),
+                  // 自定义标题样式
                   h1: ({ node: _node, ...props }) => (
-                    <h1 className="text-3xl font-bold text-slate-900 mt-8 mb-4" {...props} />
+                    <h1 className="text-3xl font-bold text-slate-900 mt-8 mb-4 border-b pb-2" {...props} />
                   ),
                   h2: ({ node: _node, ...props }) => (
-                    <h2 className="text-2xl font-bold text-slate-800 mt-6 mb-3" {...props} />
+                    <h2 className="text-2xl font-bold text-slate-800 mt-6 mb-3 border-b pb-2" {...props} />
                   ),
                   h3: ({ node: _node, ...props }) => (
                     <h3 className="text-xl font-semibold text-slate-800 mt-5 mb-2" {...props} />
                   ),
+                  // 自定义引用块样式
                   blockquote: ({ node: _node, ...props }) => (
                     <blockquote className="border-l-4 border-indigo-500 pl-4 py-2 bg-indigo-50 italic text-slate-700 my-4" {...props} />
                   ),
-                  code: ({ node: _node, inline, ...props }) => (
-                    inline ? (
-                      <code className="bg-slate-100 text-slate-800 px-1.5 py-0.5 rounded text-sm font-mono" {...props} />
+                  // 核心：自定义 `code` 渲染器
+                  code({ node: _node, inline, className, children, ...props }) {
+                    // 从 className 中匹配语言类型，例如 "language-js" -> "js"
+                    const match = /language-(\w+)/.exec(className || '');
+                    // 如果不是行内代码块并且匹配到了语言
+                    return !inline && match ? (
+                      <SyntaxHighlighter
+                        style={vscDarkPlus} // 应用 VS Code 暗色主题
+                        language={match[1]} // 设置语言
+                        PreTag="div"
+                        {...props}
+                      >
+                        {String(children).replace(/\n$/, '')}
+                      </SyntaxHighlighter>
                     ) : (
-                      <code className="block bg-slate-900 text-slate-100 p-4 rounded-lg overflow-x-auto" {...props} />
-                    )
-                  ),
+                      // 如果是行内代码或者没有指定语言，则渲染为普通样式
+                      <code className="bg-slate-100 text-slate-800 px-1.5 py-0.5 rounded text-sm font-mono" {...props}>
+                        {children}
+                      </code>
+                    );
+                  },
                 }}
               >
                 {post.content}
@@ -165,4 +185,3 @@ export default function PostDetail() {
     </div>
   );
 }
-
