@@ -4,6 +4,7 @@ import (
 	"backend/db"
 	"backend/handlers"
 	"backend/middleware"
+	"os"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -14,7 +15,8 @@ func main() {
 	router := gin.Default()
 
 	config := cors.DefaultConfig()
-	config.AllowOrigins = []string{"http://localhost:5173"}
+	// config.AllowOrigins = []string{"http://localhost:5173"}
+	config.AllowOrigins = []string{"*"}
 	config.AllowMethods = []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"}
 	config.AllowHeaders = []string{"Origin", "Content-Type", "Authorization"}
 
@@ -35,5 +37,11 @@ func main() {
 			authorized.DELETE("/posts/:id", handlers.DeletePost)
 		}
 	}
-	router.Run()
+	// router.Run()
+	// 从环境变量获取端口，如果获取不到则使用默认的8080
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+	router.Run(":" + port) // 监听动态端口
 }
