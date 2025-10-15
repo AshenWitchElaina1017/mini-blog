@@ -19,7 +19,7 @@ export default function PostForm() {
   const isEditMode = Boolean(id);
   // 如果是编辑模式，在组件加载时获取文章数据
   useEffect(() => {
-    if (isEditMode) {
+    if (isEditMode && id) {
       getPostById(id)
         .then(post => {
           // 将获取到的数据填充到表单中
@@ -62,7 +62,7 @@ export default function PostForm() {
       ...formData,
     };
     try {
-      if (isEditMode) {
+      if (isEditMode && id) {
         // 编辑模式：调用 editPost API
         const updatedPost = await editPost(id, postData as Post);
         alert(`文章 "${updatedPost.title}" 更新成功！`);

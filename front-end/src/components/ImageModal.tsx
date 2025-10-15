@@ -17,7 +17,7 @@ type ImageModalProps = {
  * 它包含一个半透明的背景遮罩和一个居中的图片。
  * 用户可以通过点击背景或关闭按钮来关闭这个模态框。
  */
-export default function ImageModal({ imageUrl, onClose }: ImageModalProps): JSX.Element | null {
+export default function ImageModal({ imageUrl, onClose }: ImageModalProps): React.ReactElement | null {
   // 如果没有提供 imageUrl，则不渲染任何内容
   if (!imageUrl) {
     return null;
